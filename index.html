@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>할일 관리</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-hover: #f0f0ed;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6b67;
+      --text-tertiary: #a0a09a;
+      --border: rgba(0,0,0,0.10);
+      --border-hover: rgba(0,0,0,0.18);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --tag-work-bg: #E6F1FB; --tag-work-text: #0C447C;
+      --tag-personal-bg: #EEEDFE; --tag-personal-text: #3C3489;
+      --tag-health-bg: #EAF3DE; --tag-health-text: #27500A;
+      --tag-other-bg: #F1EFE8; --tag-other-text: #444441;
+      --danger: #E24B4A;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1c;
+        --bg-secondary: #2a2a28;
+        --bg-hover: #333330;
+        --text-primary: #f0f0ec;
+        --text-secondary: #a0a09a;
+        --text-tertiary: #6b6b67;
+        --border: rgba(255,255,255,0.10);
+        --border-hover: rgba(255,255,255,0.20);
+        --tag-work-bg: #042C53; --tag-work-text: #B5D4F4;
+        --tag-personal-bg: #26215C; --tag-personal-text: #CECBF6;
+        --tag-health-bg: #173404; --tag-health-text: #C0DD97;
+        --tag-other-bg: #2C2C2A; --tag-other-text: #D3D1C7;
+        --danger: #F09595;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* Header */
+    .header { margin-bottom: 1.75rem; }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header h1 i { font-size: 24px; color: var(--text-secondary); }
+    .header .date {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .stat {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      text-align: center;
+    }
+    .stat-num { font-size: 22px; font-weight: 600; color: var(--text-primary); }
+    .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* Input */
+    .input-area {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 12px 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 1rem;
+      transition: border-color 0.15s;
+    }
+    .input-area:focus-within { border-color: var(--border-hover); }
+    .input-area input[type="text"] {
+      flex: 1;
+      border: none;
+      background: none;
+      outline: none;
+      font-size: 15px;
+      color: var(--text-primary);
+      font-family: inherit;
+    }
+    .input-area input::placeholder { color: var(--text-tertiary); }
+    .input-area select {
+      border: none;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 5px 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+    }
+    .add-btn {
+      width: 32px; height: 32px;
+      border: none;
+      background: var(--text-primary);
+      color: var(--bg);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .add-btn:hover { opacity: 0.85; }
+    .add-btn:active { transform: scale(0.94); }
+    .add-btn i { font-size: 18px; }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.12s;
+      font-family: inherit;
+    }
+    .filter-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+    .filter-btn.active {
+      background: var(--text-primary);
+      color: var(--bg);
+      border-color: var(--text-primary);
+    }
+
+    /* Todo list */
+    .todo-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .todo-item {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.12s, opacity 0.2s;
+      animation: slide-in 0.18s ease;
+    }
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .todo-item:hover { border-color: var(--border-hover); }
+    .todo-item.done { opacity: 0.5; }
+
+    .check-btn {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-hover);
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .check-btn.checked {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+    }
+    .check-btn.checked::after {
+      content: '';
+      width: 5px; height: 9px;
+      border: 2px solid var(--bg);
+      border-top: none; border-left: none;
+      transform: rotate(45deg) translate(-1px, -1px);
+      display: block;
+    }
+
+    .todo-text {
+      flex: 1;
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+    .todo-item.done .todo-text {
+      text-decoration: line-through;
+      color: var(--text-tertiary);
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 12px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .tag-work     { background: var(--tag-work-bg);     color: var(--tag-work-text); }
+    .tag-personal { background: var(--tag-personal-bg); color: var(--tag-personal-text); }
+    .tag-health   { background: var(--tag-health-bg);   color: var(--tag-health-text); }
+    .tag-other    { background: var(--tag-other-bg);    color: var(--tag-other-text); }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center;
+      transition: color 0.12s;
+      flex-shrink: 0;
+    }
+    .delete-btn:hover { color: var(--danger); }
+    .delete-btn i { font-size: 16px; }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-tertiary);
+    }
+    .empty i { font-size: 36px; display: block; margin-bottom: 10px; }
+    .empty p { font-size: 14px; }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      body { padding: 1.25rem 0.75rem 3rem; }
+      .input-area { flex-wrap: wrap; }
+      .input-area select { order: 3; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h1><i class="ti ti-checkbox" aria-hidden="true"></i> 내 할일</h1>
+    <p class="date" id="date-display"></p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">전체</div></div>
+    <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label">완료</div></div>
+    <div class="stat"><div class="stat-num" id="stat-left">0</div><div class="stat-label">남은 일</div></div>
+  </div>
+
+  <div class="input-area">
+    <input type="text" id="new-task" placeholder="할일을 입력하세요..." autocomplete="off" />
+    <select id="new-tag" aria-label="카테고리">
+      <option value="work">업무</option>
+      <option value="personal">개인</option>
+      <option value="health">건강</option>
+      <option value="other">기타</option>
+    </select>
+    <button class="add-btn" id="add-btn" aria-label="할일 추가">
+      <i class="ti ti-plus" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="filters" role="group" aria-label="필터">
+    <button class="filter-btn active" data-filter="all">전체</button>
+    <button class="filter-btn" data-filter="todo">미완료</button>
+    <button class="filter-btn" data-filter="done">완료</button>
+    <button class="filter-btn" data-filter="work">업무</button>
+    <button class="filter-btn" data-filter="personal">개인</button>
+    <button class="filter-btn" data-filter="health">건강</button>
+  </div>
+
+  <div class="todo-list" id="todo-list" aria-live="polite"></div>
+</div>
+
+<script>
+  const TAG_LABELS = { work: '업무', personal: '개인', health: '건강', other: '기타' };
+  const STORAGE_KEY = 'todo-app-data';
+
+  let todos = [];
+  let filter = 'all';
+  let nextId = 1;
+
+  function load() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        todos = data.todos || [];
+        nextId = data.nextId || (todos.length ? Math.max(...todos.map(t => t.id)) + 1 : 1);
+      } else {
+        todos = [
+          { id: 1, text: '팀 미팅 준비하기', tag: 'work', done: false },
+          { id: 2, text: '운동 30분', tag: 'health', done: false },
+          { id: 3, text: '장보기', tag: 'personal', done: true },
+        ];
+        nextId = 4;
+        save();
+      }
+    } catch (e) {
+      todos = [];
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ todos, nextId }));
+    } catch (e) {}
+  }
+
+  function getVisible() {
+    if (filter === 'done') return todos.filter(t => t.done);
+    if (filter === 'todo') return todos.filter(t => !t.done);
+    if (filter !== 'all') return todos.filter(t => t.tag === filter);
+    return todos;
+  }
+
+  function render() {
+    const list = document.getElementById('todo-list');
+    const visible = getVisible();
+
+    document.getElementById('stat-total').textContent = todos.length;
+    document.getElementById('stat-done').textContent = todos.filter(t => t.done).length;
+    document.getElementById('stat-left').textContent = todos.filter(t => !t.done).length;
+
+    if (visible.length === 0) {
+      list.innerHTML = `
+        <div class="empty">
+          <i class="ti ti-mood-smile" aria-hidden="true"></i>
+          <p>${filter === 'done' ? '완료된 항목이 없어요.' : '할일이 없어요!'}</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = visible.map(t => `
+      <div class="todo-item${t.done ? ' done' : ''}" data-id="${t.id}">
+        <button class="check-btn${t.done ? ' checked' : ''}"
+          onclick="toggle(${t.id})"
+          aria-label="${t.done ? '완료 취소' : '완료로 표시'}">
+        </button>
+        <span class="todo-text">${escapeHtml(t.text)}</span>
+        <span class="tag tag-${t.tag}">${TAG_LABELS[t.tag]}</span>
+        <button class="delete-btn" onclick="remove(${t.id})" aria-label="삭제">
+          <i class="ti ti-trash" aria-hidden="true"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toggle(id) {
+    const t = todos.find(t => t.id === id);
+    if (t) { t.done = !t.done; save(); render(); }
+  }
+
+  function remove(id) {
+    todos = todos.filter(t => t.id !== id);
+    save();
+    render();
+  }
+
+  function addTodo() {
+    const input = document.getElementById('new-task');
+    const tag = document.getElementById('new-tag').value;
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    todos.unshift({ id: nextId++, text, tag, done: false });
+    input.value = '';
+    input.focus();
+    filter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.filter === 'all'));
+    save();
+    render();
+  }
+
+  // Event listeners
+  document.getElementById('add-btn').addEventListener('click', addTodo);
+  document.getElementById('new-task').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filter = btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(b =>
+        b.classList.toggle('active', b === btn));
+      render();
+    });
+  });
+
+  // Date display
+  document.getElementById('date-display').textContent =
+    new Date().toLocaleDateString('ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+    });
+
+  load();
+  render();
+</script>
+</body>
+</html>
